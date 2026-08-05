@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -ge 3306 -and $_.LocalPort -le 3320 } | Select-Object LocalPort | Sort-Object LocalPort -Unique)"
-    ]
-  }
-}

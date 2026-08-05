@@ -11,15 +11,15 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/', validate(PaginationQueryDto, 'query'), taskController.list);
-router.get('/:id', validate(IdParamDto, 'params'), taskController.getById);
-router.post('/', validate(CreateTaskDto, 'body'), taskController.create);
+router.get('/all', validate(PaginationQueryDto, 'query'), taskController.list);
+router.get('/byid/:id', validate(IdParamDto, 'params'), taskController.getById);
+router.post('/create', validate(CreateTaskDto, 'body'), taskController.create);
 router.put(
-  '/:id',
+  '/edit/:id',
   validate(IdParamDto, 'params'),
   validate(UpdateTaskDto, 'body'),
   taskController.update,
 );
-router.delete('/:id', validate(IdParamDto, 'params'), taskController.remove);
+router.delete('/remove/:id', validate(IdParamDto, 'params'), taskController.remove);
 
 export default router;
