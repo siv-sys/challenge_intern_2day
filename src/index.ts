@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import { AppDataSource } from './config/data-source';
 import routes from './routes';
@@ -12,7 +13,8 @@ function createApp(): Express {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: env.corsOrigin }));
+  app.use(cors({ origin: env.corsOrigin, credentials: true }));
+  app.use(cookieParser());
   app.use(express.json());
 
   app.get('/health', (_req, res) => {

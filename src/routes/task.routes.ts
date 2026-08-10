@@ -20,6 +20,11 @@ router.put(
   validate(UpdateTaskDto, 'body'),
   taskController.update,
 );
+// Soft delete: task row stays in DB, isActive flips to false.
 router.delete('/remove/:id', validate(IdParamDto, 'params'), taskController.remove);
+// Future-ready: restore a soft-deleted task.
+router.post('/restore/:id', validate(IdParamDto, 'params'), taskController.restore);
+// Future-ready: permanently remove the row (admin-only later).
+router.delete('/hard/:id', validate(IdParamDto, 'params'), taskController.hardDelete);
 
 export default router;

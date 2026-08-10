@@ -36,6 +36,8 @@ export const taskService = {
       sortOrder: query.sortOrder,
       status: query.status,
       search: query.search,
+      // Only active tasks are returned by default (soft-delete).
+      isActive: true,
     });
     return { tasks, total };
   },
@@ -65,8 +67,36 @@ export const taskService = {
     return taskRepository.save(task);
   },
 
-  async delete(userId: number, id: number): Promise<void> {
+  /**
+   * Soft-delete: hides the task from all normal lists by flipping
+   * `isActive` to `false`. The record remains in the database.
+   */
+  async delete(userId: number, id: number): Promise<Task> {
     const task = await getOwnedTaskOrThrow(userId, id);
-    await taskRepository.remove(task);
+    return taskRepository.softDelete(task);
+  },
+
+  /**
+   * Restore a soft-deleted task (future-ready). Flipping `isActive`
+   * back to `true` brings it back into normal lists.
+   */
+  async restore(userId: number, id: number): Promise<Task> {
+    const task = await taskRepository.findByIdAndUserIncludingInactive(id, userId);
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+    return taskRepository.restore(task);
+  },
+
+  /**
+   * Permanent delete — the row is removed from the database.
+   * Intended for admin-only operations in future releases.
+   */
+  async hardDelete(userId: number, id: number): Promise<void> {
+    const task = await taskRepository.findByIdAndUserIncludingInactive(id, userId);
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+    await taskRepository.hardDelete(task);
   },
 };

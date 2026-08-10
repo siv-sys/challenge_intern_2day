@@ -24,11 +24,10 @@ export interface LoginInput {
 
 export interface LoginResult {
   user: SafeUser;
-  token: string;
 }
 
 export const authService = {
-  async register(input: RegisterInput): Promise<SafeUser> {
+  async register(input: RegisterInput): Promise<LoginResult> {
     const existing = await userRepository.findByEmail(input.email);
     if (existing) {
       throw new ConflictError('Email is already registered');
@@ -41,7 +40,9 @@ export const authService = {
       password: hashedPassword,
     });
 
-    return toSafeUser(user);
+    const safeUser = toSafeUser(user);
+    const token = signAccessToken({ userId: user.id, email: user.email });
+    return { user: safeUser, _token: token };
   },
 
   async login(input: LoginInput): Promise<LoginResult> {
@@ -58,7 +59,7 @@ export const authService = {
     }
 
     const token = signAccessToken({ userId: user.id, email: user.email });
-    return { user: toSafeUser(user), token };
+    return { user: toSafeUser(user), _token: token };
   },
 
   async getMe(userId: number): Promise<SafeUser> {

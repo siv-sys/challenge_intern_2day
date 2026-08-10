@@ -33,6 +33,14 @@ export class Task {
   @Column({ type: 'date', nullable: true, name: 'due_date' })
   dueDate!: string | null;
 
+  /**
+   * Soft-delete flag. `true` = visible in normal lists, `false` = hidden
+   * (record still exists in the database). Defaults to `true`.
+   */
+  @Index()
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive!: boolean;
+
   @Index()
   @Column({ name: 'user_id' })
   userId!: number;

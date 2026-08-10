@@ -57,8 +57,31 @@ export const taskController = {
     try {
       const userId = req.user!.userId;
       const { id } = req.params as unknown as IdParamDto;
-      await taskService.delete(userId, id);
-      res.status(200).json(successResponse(null, 'Task deleted successfully'));
+      // Soft delete: the task row stays in the DB with isActive = false.
+      const task = await taskService.delete(userId, id);
+      res.status(200).json(successResponse(task, 'Task deleted successfully'));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async restore(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.userId;
+      const { id } = req.params as unknown as IdParamDto;
+      const task = await taskService.restore(userId, id);
+      res.status(200).json(successResponse(task, 'Task restored successfully'));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async hardDelete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.userId;
+      const { id } = req.params as unknown as IdParamDto;
+      await taskService.hardDelete(userId, id);
+      res.status(200).json(successResponse(null, 'Task permanently deleted'));
     } catch (error) {
       next(error);
     }

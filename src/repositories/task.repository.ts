@@ -13,6 +13,8 @@ export interface FindTasksParams {
   sortOrder: 'ASC' | 'DESC';
   status?: TaskStatus;
   search?: string;
+  /** When `true`, only active tasks are returned. When `false`, only inactive (soft-deleted) tasks. */
+  isActive?: boolean;
 }
 
 export interface CreateTaskData {
@@ -28,6 +30,11 @@ export type UpdateTaskData = Partial<Omit<CreateTaskData, 'userId'>>;
 export const taskRepository = {
   async findAndCountByUser(params: FindTasksParams): Promise<[Task[], number]> {
     const where: FindOptionsWhere<Task> = { userId: params.userId };
+
+    // Only return active tasks by default; allow explicit filtering for
+    // inactive (soft-deleted) tasks when requested.
+    where.isActive = params.isActive ?? true;
+
     if (params.status) {
       where.status = params.status;
     }
@@ -46,6 +53,11 @@ export const taskRepository = {
   },
 
   async findByIdAndUser(id: number, userId: number): Promise<Task | null> {
+    return ormRepository.findOne({ where: { id, userId, isActive: true } });
+  },
+
+  /** Finds a task regardless of its `isActive` state — used for restore / admin operations. */
+  async findByIdAndUserIncludingInactive(id: number, userId: number): Promise<Task | null> {
     return ormRepository.findOne({ where: { id, userId } });
   },
 
@@ -58,7 +70,20 @@ export const taskRepository = {
     return ormRepository.save(task);
   },
 
-  async remove(task: Task): Promise<void> {
+  /** Soft-delete: flips `isActive` to `false` instead of removing the row. */
+  async softDelete(task: Task): Promise<Task> {
+    task.isActive = false;
+    return ormRepository.save(task);
+  },
+
+  /** Restore a soft-deleted task by flipping `isActive` back to `true`. */
+  async restore(task: Task): Promise<Task> {
+    task.isActive = true;
+    return ormRepository.save(task);
+  },
+
+  /** Permanently removes the row from the database (admin-only future use). */
+  async hardDelete(task: Task): Promise<void> {
     await ormRepository.remove(task);
   },
 };
